@@ -25,6 +25,31 @@
 	            });
 	        });
 	    });
+	    
+	    $("#filterBtn").click(function () {
+	    $("#tblHotel tr").not(":first").show();
+	    var selectedPrice = parseInt($('#priceValue').text());
+	
+	    $("#tblHotel tr").not(":first").each(function (index, val) {
+	        let tableRow = $(this);
+	        var price = parseInt($(this).children("td").eq(2).text());
+	        var rating = parseInt($(this).children("td").eq(4).text());
+			console.log("rating", rating);
+	        if (price > selectedPrice) {
+	            tableRow.hide();
+	        }
+	
+	        $('input:checkbox.star_rating').each(function () {
+	            let selectedRating = (this.checked ? parseInt($(this).val()) : null);
+				console.log(selectedRating);
+				console.log(rating);
+	            if (selectedRating == null && rating ==$(this).val()) {
+	                tableRow.hide();
+	            }
+	        });
+	    });
+});
+	    
 	});
 </script>
 </head>

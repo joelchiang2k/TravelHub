@@ -22,4 +22,5 @@ public class HotelService {
 	public List<Hotel> findAllHotel(){
 		return hotelRepository.findAll();
 	}
+
 }

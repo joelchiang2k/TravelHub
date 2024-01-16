@@ -20,37 +20,167 @@
 	            $.each(responseText, function(index, val) {
 	                console.log(index, val);
 	                $("#tblHotel").append("<tr><td>" + val.hotelName + "</td><td>" + val.address + "</td>" +
-	                    "<td>" + val.averagePrice + "</td><td><img length=300 width=200 src='" + val.imageURL + "'>" +
-	                    "</img></td><td>" + val.starRating + "</td></tr>");
+			        "<td>" + val.averagePrice + "</td><td><img class='hotel-image' length=300 width=200 src='" + val.imageURL + "' data-hotelname='" + val.hotelName + "'>" +
+			        "</img></td><td>" + val.starRating + "</td>" +
+			        "<td><button class='btn btn-primary btn-show-details' data-hotelname='" + val.hotelName + "'>Show Details</button></td></tr>");
 	            });
 	        });
 	    });
 	    
-	    $("#filterBtn").click(function () {
-	    $("#tblHotel tr").not(":first").show();
-	    var selectedPrice = parseInt($('#priceValue').text());
-	
-	    $("#tblHotel tr").not(":first").each(function (index, val) {
-	        let tableRow = $(this);
-	        var price = parseInt($(this).children("td").eq(2).text());
-	        var rating = parseInt($(this).children("td").eq(4).text());
-			console.log("rating", rating);
-	        if (price > selectedPrice) {
-	            tableRow.hide();
-	        }
-	
-	        $('input:checkbox.star_rating').each(function () {
-	            let selectedRating = (this.checked ? parseInt($(this).val()) : null);
-				console.log(selectedRating);
-				console.log(rating);
-	            if (selectedRating == null && rating ==$(this).val()) {
-	                tableRow.hide();
-	            }
-	        });
-	    });
+	    var selectedRoomType;
+	    
+	    function fetchRoomTypes() {
+		    $.ajax({
+		        url: 'http://localhost:8383/getRoomTypes', 
+		        method: 'GET',
+		        success: function(data) {
+		        	console.log(data);
+		            $('#select_roomTypes').empty();
+		
+		            $.each(data, function(index, roomType) {
+		                $('#select_roomTypes').append($('<option>', {
+		                    value: roomType.typeId, 
+		                    text: roomType.name
+		                }));
+		            });
+		            
+		            selectedRoomType = $('#select_roomTypes').val();
+		  			var defaultRoomTypeId = selectedRoomType;
+		  			
+			        var defaultRoomTypeName = data.find(roomType => roomType.typeId === parseInt(defaultRoomTypeId));
+			        $('#booking_roomType').val(defaultRoomTypeName);
+				    console.log("SELECTED", defaultRoomTypeName);
+				    updateDiscountAndPrice(selectedRoomType);
+		        },
+		        error: function(err) {
+		            console.error('Error fetching room types:', err);
+		        }
+		    });
+		}
+		fetchRoomTypes();
+		
+		
+		
+	    
+	    $("#tblHotel").on('click', '.btn-show-details, .hotel-image', function(){
+		    let hotelName = $(this).data('hotelname');
+		    console.log("THISDATA", hotelName);
+		    processHotelDetails(hotelName);
+		    processBookingDetails(hotelName);
+		    
+		    $("#edit").click( function(){
+				console.log('edit');
+				$("#bookingHotelRoomModal").hide();
+			});
+			
+		    return false;
+		});
+		
+		
+		function updateDiscountAndPrice(selectedRoomType){
+			$.ajax({
+		            url: 'http://localhost:8383/getHotelRoomDetails',
+		            method: 'GET',
+		            success: function(roomTypeDetails) {
+		            	console.log(roomTypeDetails);
+		            	roomTypeDetails.forEach(function(roomTypeDetail) {
+						    var hotelRoomId = roomTypeDetail.hotelRoomId;
+						    if (hotelRoomId == selectedRoomType){
+						    	var discount = roomTypeDetail.discount;
+						    	var totalPrice = roomTypeDetail.price;
+						    	console.log("discount", discount);
+					            console.log("price", totalPrice);
+					            $('#booking_discount').text(discount);
+					            $('#booking_price').text(totalPrice);
+						    }
+						});
+		            	
+		            },
+		            error: function(error) {
+		                console.error('Error fetching room type details:', error);
+		            }
+		        });
+		}
+		
+		
+		function processHotelDetails(hotelName) {
+		    var noGuests = $('#noGuests').val();
+		    var noRooms = $('#noRooms').val();
+		    var checkInDate = $('#checkInDate').val();
+		    var checkOutDate = $('#checkOutDate').val();
+		    
+		    var defaultRoomType = "Single Room";
+    		$('#booking_roomType').val(defaultRoomType);
+		    
+		    $('#select_roomTypes').change(function() {
+		        selectedRoomType = $(this).val();
+		        $('#booking_roomType').val($('#select_roomTypes option:selected').text());
+		        updateDiscountAndPrice(selectedRoomType);
+				console.log("selectedRoomTypeHotel", selectedRoomType)	     
+		    });
+		    $('#modal_hotelName').val(hotelName);
+		    $('#modal_noGuests').val(noGuests);
+		    $('#modal_noRooms').val(noRooms);
+		    $('#modal_checkInDate').val(checkInDate);
+		    $('#modal_checkOutDate').val(checkOutDate);
+		    $("#myModal").toggle();
+		}
+		
+		function processBookingDetails(hotelName) {
+		    var noGuests = $('#noGuests').val();
+		    var noRooms = $('#noRooms').val();
+		    var checkInDate = $('#checkInDate').val();
+		    var checkOutDate = $('#checkOutDate').val();
+		   
+		    
+		    $('#booking_hotelName').val(hotelName);
+		    $('#booking_customerMobile').val("");
+		    $('#booking_noGuests').val(noGuests);
+		    $('#booking_noRooms').val(noRooms);
+		    $('#booking_checkInDate').val(checkInDate);
+		    $('#booking_checkOutDate').val(checkOutDate);
+		    
+		}
+		
+		$("#myModal").on('click', '.btn-searchHotelRooms, .btn-show-details', function(){
+		    $("#bookingHotelRoomModal").toggle();
+		    
+		});
+		
+
+		
+		$("#clsModal").click(function(){
+		    console.log('hide');
+			$("#bookingHotelRoomModal").hide();
+			$("#myModal").hide();
+		});
+		
+		$("#closeModal").click(function(){
+		    console.log('hide');
+			$("#myModal").hide();
+		});
+	    
+	   
+	    
+	    $("#filterBtn").click(function() {
+        $("#tblHotel tr").not(":first").show();
+        var selectedPrice = parseInt($('#priceValue').text());
+        var selectedStarRating = $(".star_rating:checked").map(function() {
+            return parseInt($(this).val());
+        }).get();
+
+        $("#tblHotel tr").not(":first").each(function(index, val) {
+            var price = $(this).children("td").eq("2").text();
+            var starRating = parseInt($(this).children("td").eq("4").text());
+
+            if (price > selectedPrice || (selectedStarRating.length > 0 && selectedStarRating.indexOf(starRating) === -1)) {
+                $(this).hide();
+            }
+        });
+    });
 });
 	    
-	});
+	
 </script>
 </head>
 <body>
@@ -154,7 +284,7 @@
 	
 	<div id="listHotel">
 		<table id='tblHotel' border='1'>
-			<tr><th>Name</th><th>Address</th><th>Price</th><th>Image</th><th>Star</th></tr>
+			<tr><th>Name</th><th>Address</th><th>Price</th><th>Image</th><th>Star</th><th>Detail</th></tr>
 		</table>
 	</div>
 	
@@ -189,7 +319,7 @@
       </div>
 
       <!-- Modal footer -->
-      <div class="modal-footer">
+      <div class="modal-footer" id="closeModal">
         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
       </div>
 
@@ -247,13 +377,13 @@
        			<div>Total Price: $<span id="booking_price"></span></div>       			
        			<div style='margin-top:20px'>
        				<button class='btn-confirm-booking btn btn-primary'>Confirm Booking</button>
-       				<button class='btn btn-primary'>Edit</button>
+       				<button class='btn btn-primary' id="edit">Edit</button>
        			</div>
         	</div>          
       </div>
 
       <!-- Modal footer -->
-      <div class="modal-footer">
+      <div class="modal-footer" id="clsModal">
         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
       </div>
 

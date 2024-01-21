@@ -12,6 +12,7 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
+
 @Configuration
 public class AppConfig {
 	@Autowired DataSource dataSource;
@@ -43,6 +44,7 @@ public class AppConfig {
 		
 		return sessionFactory;
 	}
+	
 	
 //	@Bean
 //	public ViewResolver viewResolver() {

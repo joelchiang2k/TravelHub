@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
@@ -46,6 +47,19 @@ public class AppConfig {
 		return sessionFactory;
 	}
 	
+//	@Bean
+//	NoOpPasswordEncoder noOpPasswordEncoder() {
+//		return (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
+//	}
+	
+	@Bean
+	BCryptPasswordEncoder bCryptPasswordEncoder() {
+		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+		String encrypted = encoder.encode("joel");
+		System.out.println("encrypted:" + encrypted);
+		return encoder;
+	}
+//	
 	@Bean
 	public ViewResolver viewResolver() {
 		InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();

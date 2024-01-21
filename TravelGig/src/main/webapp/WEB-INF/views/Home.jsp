@@ -1,3 +1,4 @@
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -87,11 +88,13 @@
 						    var hotelRoomId = roomTypeDetail.hotelRoomId;
 						    if (hotelRoomId == selectedRoomType){
 						    	var discount = roomTypeDetail.discount;
-						    	var totalPrice = roomTypeDetail.price;
+						    	var price = roomTypeDetail.price;
+						    	var totalPrice = roomTypeDetail.price * ((100 - discount)/100);
 						    	console.log("discount", discount);
 					            console.log("price", totalPrice);
 					            $('#booking_discount').text(discount);
-					            $('#booking_price').text(totalPrice);
+					            $('#booking_price').text(price);
+					            $('#booking_totalPrice').text(totalPrice);
 						    }
 						});
 		            	
@@ -188,6 +191,13 @@
 <h1>Welcome to Travel Gig</h1>
 <h2>Search your desired hotel</h2>
 </div>
+<sec:authorize access="isAuthenticated()">
+	<td>|</td>
+		<br>Granted Authorities: <sec:authentication property="principal.authorities"/>
+		<br> loggedInUser: ${loggedInUser}
+		<td></td>
+		<td><a href="logout">Logout</a></td>
+</sec:authorize>
 
 <div class="container border rounded" style="margin:auto;padding:50px;margin-top:50px;margin-bottom:50px">
 	<h3>Narrow your search results</h3>
@@ -373,8 +383,9 @@
        			<div>Check-In Date: <input readonly="true" class="form-control" type="text" id="booking_checkInDate"/></div>
        			<div>Check-Out Date: <input readonly="true" class="form-control" type="text" id="booking_checkOutDate"/></div>
        			<div>Room Type: <input readonly="true" class="form-control" type="text" id="booking_roomType"/></div>
-       			<div>Discount: $<span id="booking_discount"></span></div>
-       			<div>Total Price: $<span id="booking_price"></span></div>       			
+       			<div>Discount: <span id="booking_discount"></span>%</div>
+       			<div>Price before discount: $<span id="booking_price"></span></div> 
+       			<div>Total Price: $<span id="booking_totalPrice"></span></div>       			
        			<div style='margin-top:20px'>
        				<button class='btn-confirm-booking btn btn-primary'>Confirm Booking</button>
        				<button class='btn btn-primary' id="edit">Edit</button>

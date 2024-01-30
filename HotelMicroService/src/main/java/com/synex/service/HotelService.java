@@ -1,6 +1,7 @@
 package com.synex.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,10 @@ public class HotelService {
 	
 	public List<Hotel> findAllHotel(){
 		return hotelRepository.findAll();
+	}
+	
+	public Optional<Hotel> findHotel(int hotelId) {
+		return hotelRepository.findById(hotelId);
 	}
 
 }

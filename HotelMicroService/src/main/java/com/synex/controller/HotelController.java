@@ -1,6 +1,7 @@
 package com.synex.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,6 +40,10 @@ public class HotelController {
 	@CrossOrigin(origins = "http://localhost:8282")
 	public List<RoomType> findRoomTypes(){
 		return roomTypeService.findAll();
+	}
+	@RequestMapping(value="/hotel/{hotelId}")
+	public Optional<Hotel> findHotel(@PathVariable int hotelId) {
+		return hotelService.findHotel(hotelId);
 	}
 	
 	@RequestMapping(value = "/getHotelRoomDetails")

@@ -10,6 +10,45 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" type="text/css" href="home.css">
 <script>
+
+	 function saveEditedGuest() {
+	    var guests = [];
+		var noGuests = $('#noGuests').val()
+	     
+	     for (var i = 0; i < noGuests; i++) {
+	        var guest = {
+	            firstName: $('[id^=editGuestFirstName]').eq(i).val(),
+	            lastName: $('[id^=editGuestLastName]').eq(i).val(),
+	            age: $('[id^=editGuestAge]').eq(i).val(),
+	            gender: $('[id^=editGuestGender]').eq(i).val(),
+	        };
+	
+	        guests.push(guest);
+	    }
+		
+
+    	console.log(guests);
+	    // Use AJAX to send the array of guest objects to the server
+	    $.ajax({
+	        type: "POST",
+	        url: "http://localhost:8484/saveGuest",
+	        contentType: "application/json",
+	        data: JSON.stringify(guests),
+	        success: function(response) {
+	            // Handle success, e.g., close the modal
+	            $("#editGuestModal").modal("hide");
+	            // You may also update the UI with the new guest details if needed
+	        },
+	        error: function(error) {
+	            // Handle error
+	            console.error("Error updating guest details:", error);
+	        }
+	    });
+	}
+	  
+	var discount;
+	var price;
+	var totalPrice;
 	$(document).ready(function() {
 	    $("#searchBtn").click(function() {
 	        console.log("clicked");
@@ -19,16 +58,17 @@
 	        }, function(responseText) {
 	        	console.log(responseText);
 	            $.each(responseText, function(index, val) {
-	                console.log(index, val);
+	                console.log("index" + index, val);
 	                $("#tblHotel").append("<tr><td>" + val.hotelName + "</td><td>" + val.address + "</td>" +
 			        "<td>" + val.averagePrice + "</td><td><img class='hotel-image' length=300 width=200 src='" + val.imageURL + "' data-hotelname='" + val.hotelName + "'>" +
 			        "</img></td><td>" + val.starRating + "</td>" +
-			        "<td><button class='btn btn-primary btn-show-details' data-hotelname='" + val.hotelName + "'>Show Details</button></td></tr>");
+			        "<td><button class='btn btn-primary btn-show-details' data-hotelname='" + val.hotelName + "' data-hotelid='" + val.hotelId + "'>Show Details</button></td></tr>");
 	            });
 	        });
 	    });
 	    
 	    var selectedRoomType;
+	
 	    
 	    function fetchRoomTypes() {
 		    $.ajax({
@@ -60,11 +100,52 @@
 		}
 		fetchRoomTypes();
 		
+		 $("#editGuestModalButton").click(function(){
+		    console.log("noGuests", $('#noGuests').val());
+		    showGuestModal($('#noGuests').val());
+		});
+	
+	 	 function showGuestModal(noGuests) {
+		    // Clear any existing modal content
+		    $('#editGuestModalBody').empty();
 		
+		    // Create form fields for each guest
+		    for (var i = 1; i <= noGuests; i++) {
+		        $('#editGuestModalBody').append(`
+		            <div class="form-group">
+		                <label for="editGuestFirstName${i}">First Name:</label>
+		                <input type="text" class="form-control" id="editGuestFirstName${i}" name="editGuestFirstName${i}" required>
+		            </div>
+		            <div class="form-group">
+		                <label for="editGuestLastName${i}">Last Name:</label>
+		                <input type="text" class="form-control" id="editGuestLastName${i}" name="editGuestLastName${i}" required>
+		            </div>
+		            <div class="form-group">
+		                <label for="editGuestAge${i}">Age:</label>
+		                <input type="number" class="form-control" id="editGuestAge${i}" name="editGuestAge${i}" required>
+		            </div>
+		            <div class="form-group">
+		                <label for="editGuestGender${i}">Gender:</label>
+		                <select class="form-control" id="editGuestGender${i}" name="editGuestGender${i}" required>
+		                    <option value="Male">Male</option>
+		                    <option value="Female">Female</option>
+		                    <option value="Others">Others</option>
+		                </select>
+		            </div>
+		            <hr>
+		        `);
+		    }
+			
 		
+		    // Show the guest information modal
+		    $('#editGuestModal').modal('show');
+		}
+		
+	    let currentHotelId; 
 	    
 	    $("#tblHotel").on('click', '.btn-show-details, .hotel-image', function(){
 		    let hotelName = $(this).data('hotelname');
+		    currentHotelId = $(this).data('hotelid');
 		    console.log("THISDATA", hotelName);
 		    processHotelDetails(hotelName);
 		    processBookingDetails(hotelName);
@@ -87,9 +168,9 @@
 		            	roomTypeDetails.forEach(function(roomTypeDetail) {
 						    var hotelRoomId = roomTypeDetail.hotelRoomId;
 						    if (hotelRoomId == selectedRoomType){
-						    	var discount = roomTypeDetail.discount;
-						    	var price = roomTypeDetail.price;
-						    	var totalPrice = roomTypeDetail.price * ((100 - discount)/100);
+						    	discount = roomTypeDetail.discount;
+						    	price = roomTypeDetail.price;
+						    	totalPrice = roomTypeDetail.price * ((100 - discount)/100);
 						    	console.log("discount", discount);
 					            console.log("price", totalPrice);
 					            $('#booking_discount').text(discount);
@@ -138,6 +219,7 @@
 		    
 		    $('#booking_hotelName').val(hotelName);
 		    $('#booking_customerMobile').val("");
+		    $('#booking_userEmail').val("");
 		    $('#booking_noGuests').val(noGuests);
 		    $('#booking_noRooms').val(noRooms);
 		    $('#booking_checkInDate').val(checkInDate);
@@ -163,7 +245,118 @@
 			$("#myModal").hide();
 		});
 	    
-	   
+	    $("#confirmBookingBtn").on('click', function(){
+	    	let hotelId = currentHotelId
+		    console.log("htoelID" + hotelId);
+	    	var bookingData = getBookingDetails(hotelId);
+	    	console.log("bookingDetails" + bookingData);
+	    	
+	    	$.ajax({
+	    		type:"POST",
+	    		url:"http://localhost:8484/saveBooking",
+	    		contentType: "application/json",
+	    		data: JSON.stringify(bookingData),
+	    		success: function(response){
+	    		var bookingId = response.bookingId;
+	    			console.log("bookingData" + JSON.stringify(bookingData));
+	    			alert("Booking confirmed!");
+	    			saveGuestWithBookingId(bookingId);
+	    			
+	    			 // Nested AJAX call to /bookHotel within the success callback
+		            $.ajax({
+		                type: "POST",
+		                url: "http://localhost:8484/bookHotel",
+		                contentType: "application/json",
+		                data: JSON.stringify(bookingData),
+		                success: function (response) {
+		                    alert("Email Sent!");
+		                    // Rest of your success handling code
+		                },
+		                error: function (error) {
+		                    alert("Error sending email: " + error.responseText);
+		                }
+		            });
+	    		},
+	    		error: function(error)
+	    		{
+	    			alert("error confirming booking: " + error.responseText);
+	    		}
+	    	
+	    	});
+	    });
+	    
+	    function saveGuestWithBookingId(bookingId) {
+		    var editedGuests = [];
+		    var noGuests = $('#noGuests').val();
+		
+		    for (var i = 0; i < noGuests; i++) {
+		        var guest = {
+		            firstName: $('[id^=editGuestFirstName]').eq(i).val(),
+		            lastName: $('[id^=editGuestLastName]').eq(i).val(),
+		            age: $('[id^=editGuestAge]').eq(i).val(),
+		            gender: $('[id^=editGuestGender]').eq(i).val(),
+		            bookingId: bookingId  // Include the bookingId in each guest object
+		        };
+		
+		        editedGuests.push(guest);
+		    }
+		
+		    console.log("editedGuests" + editedGuests);
+		
+		    $.ajax({
+		        type: "POST",
+		        url: "http://localhost:8484/editGuest",
+		        contentType: "application/json",
+		        data: JSON.stringify(editedGuests),
+		        success: function (response) {
+		            alert("Guest details saved!");
+					
+		         
+		        },
+		        error: function (error) {
+		            alert("Error saving guest details: " + error.responseText);
+		        }
+		    });
+		}
+		
+	
+	    
+	    function getBookingDetails(hotelId){
+	   		var guests = [];
+			var noGuests = $('#noGuests').val()
+		     
+		     for (var i = 0; i < noGuests; i++) {
+		        var guest = {
+		            firstName: $('[id^=editGuestFirstName]').eq(i).val(),
+		            lastName: $('[id^=editGuestLastName]').eq(i).val(),
+		            age: $('[id^=editGuestAge]').eq(i).val(),
+		            gender: $('[id^=editGuestGender]').eq(i).val(),
+		        };
+		
+		        guests.push(guest);
+		    }
+		    
+	    	var bookingDetails = 
+	    	{
+	    		bookingId:$("#bookingId").val(), 
+	    		hotelId:hotelId,
+	    		hotelName: $("#booking_hotelName").val(),
+	    		customerMobile: $("#booking_customerMobile").val(),
+	    		userEmail: $("#booking_userEmail").val(),
+	    		noGuests: $("#booking_noGuests").val(),
+	    		guests: guests,
+	    		noRooms: $('#noRooms').val(),
+	    		checkInDate: $("#booking_checkInDate").val(),
+	    		checkOutDate: $("#booking_checkOutDate").val(),
+	    		roomType: $("#booking_roomType").val(),
+	    		price: totalPrice,
+	    		discount: discount
+	    	
+	    	};
+	    	
+	    	return bookingDetails;
+	    	
+	    }
 	    
 	    $("#filterBtn").click(function() {
         $("#tblHotel tr").not(":first").show();
@@ -191,12 +384,19 @@
 <h1>Welcome to Travel Gig</h1>
 <h2>Search your desired hotel</h2>
 </div>
+<sec:authorize access="!isAuthenticated()">
+    
+    <div class="container" style="text-align: right; margin-top: 10px;">
+        <a href="login">Login</a>
+    </div>
+</sec:authorize>
 <sec:authorize access="isAuthenticated()">
 	<td>|</td>
 		<br>Granted Authorities: <sec:authentication property="principal.authorities"/>
 		<br> loggedInUser: ${loggedInUser}
 		<td></td>
-		<td><a href="logout">Logout</a></td>
+		<td><a href="login?logout">Logout</a></td>
+		<td><a href="booking">Bookings</a></td>
 </sec:authorize>
 
 <div class="container border rounded" style="margin:auto;padding:50px;margin-top:50px;margin-bottom:50px">
@@ -323,7 +523,13 @@
         	<select class="form-control" id="select_roomTypes">
         	</select>
         	No. Rooms: <input class="form-control" type="number" id="modal_noRooms"/>
-        	<input style="margin-top:25px" class="btn btn-searchHotelRooms form-control btn-primary" type="button" id="" value="SEARCH"/>       	
+        	
+        	<input style="margin-top:25px" class="btn btn-searchHotelRooms form-control btn-primary" type="button" id="" value="SEARCH"/>
+        	<div style='margin-top:20px'>
+	        	<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editGuestModal" id="editGuestModalButton">
+				  Edit Guest Details
+				</button> 
+			</div>      	
         </div>
         
       </div>
@@ -335,6 +541,34 @@
 
     </div>
   </div>
+</div>
+
+<!-- Edit Guest Modal -->
+<div class="modal fade" id="editGuestModal" tabindex="-1" role="dialog" aria-labelledby="editGuestModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGuestModalLabel">Edit Guest Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Container for dynamically generated content -->
+                <div id="editGuestModalBody"></div>
+
+                <!-- Form for editing guest details -->
+                <form id="editGuestForm">
+                    <!-- Other form fields go here -->
+
+                    <button type="button" class="btn btn-primary" onclick="saveEditedGuest()">Save Changes</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal" id="hotelRoomsModal">
@@ -379,6 +613,7 @@
 	        	<div>Hotel Name: <input readonly="true" class="form-control" type="text" id="booking_hotelName"/></div>
 	        	<div>Customer Mobile: <input class="form-control" type="text" id="booking_customerMobile"/></div>
        			<div id="noGuestsDiv">No. Guests: <input readonly="true" class="form-control" type="number" id="booking_noGuests"/></div>
+       			<div>Email: <input class="form-control" type="text" id="booking_userEmail" /></div>
        			<div>No. Rooms: <input readonly="true" class="form-control" type="number" id="booking_noRooms"/></div>
        			<div>Check-In Date: <input readonly="true" class="form-control" type="text" id="booking_checkInDate"/></div>
        			<div>Check-Out Date: <input readonly="true" class="form-control" type="text" id="booking_checkOutDate"/></div>
@@ -387,7 +622,7 @@
        			<div>Price before discount: $<span id="booking_price"></span></div> 
        			<div>Total Price: $<span id="booking_totalPrice"></span></div>       			
        			<div style='margin-top:20px'>
-       				<button class='btn-confirm-booking btn btn-primary'>Confirm Booking</button>
+       				<button class='btn-confirm-booking btn btn-primary' id='confirmBookingBtn'>Confirm Booking</button>
        				<button class='btn btn-primary' id="edit">Edit</button>
        			</div>
         	</div>          

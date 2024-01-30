@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class AppConfig {
@@ -42,6 +43,11 @@ public class AppConfig {
 		sessionFactory.setHibernateProperties(properties());
 		
 		return sessionFactory;
+	}
+	
+	@Bean
+	public RestTemplate restTemplate() {
+	    return new RestTemplate();
 	}
 	
 //	@Bean

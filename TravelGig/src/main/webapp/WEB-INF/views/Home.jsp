@@ -62,7 +62,9 @@
 	                $("#tblHotel").append("<tr><td>" + val.hotelName + "</td><td>" + val.address + "</td>" +
 			        "<td>" + val.averagePrice + "</td><td><img class='hotel-image' length=300 width=200 src='" + val.imageURL + "' data-hotelname='" + val.hotelName + "'>" +
 			        "</img></td><td>" + val.starRating + "</td>" +
-			        "<td><button class='btn btn-primary btn-show-details' data-hotelname='" + val.hotelName + "' data-hotelid='" + val.hotelId + "'>Show Details</button></td></tr>");
+			        "<td><button class='btn btn-primary btn-show-details' data-hotelname='" + val.hotelName + "' data-hotelid='" + val.hotelId + "'>Show Details</button>" +
+    "<button class='btn btn-info btn-show-reviews' data-hotelid='" + val.hotelId + "'>Show Reviews</button></td></tr>");
+
 	            });
 	        });
 	    });
@@ -156,6 +158,48 @@
 			});
 			
 		    return false;
+		});
+		
+		$("#tblHotel").on('click', '.btn-show-reviews', function() {
+		    let hotelId = $(this).data('hotelid');
+		
+		    // Make an AJAX request to fetch reviews for the given hotelId
+		    $.get("http://localhost:8484/findReviews/" + hotelId, function(reviews) {
+		        console.log(reviews);
+		
+		        var modalHtml = "<div class='modal' id='reviewsModal' tabindex='-1' role='dialog'>" +
+		            "<div class='modal-dialog' role='document'>" +
+		            "<div class='modal-content'>" +
+		            "<div class='modal-header'>" +
+		            "<h5 class='modal-title'>Reviews for Hotel</h5>" +
+		            "<button type='button' class='close' data-dismiss='modal' aria-label='Close'>" +
+		            "<span aria-hidden='true'>&times;</span>" +
+		            "</button>" +
+		            "</div>" +
+		            "<div class='modal-body'><ul>";
+		
+		        $.each(reviews, function(index, review) {
+		            modalHtml += "<li>" +
+		                "Comment: " + review.text + "<br>" +
+		                "Whole Experience Rating: " + review.wholeExpRating + "<br>" +
+		                "Booking Process Rating: " + review.bookingProcessRating + "<br>" +
+		                "Amenities Rating: " + review.amenitiesRating + "<br>" +
+		                "Service Rating: " + review.serviceRating + "<br>" +
+		                "Overall Rating: " + review.overallRating + "<br>" +
+		                "</li>";
+		        });
+		
+		        modalHtml += "</ul></div>" +
+		            "<div class='modal-footer'>" +
+		            "<button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>" +
+		            "</div></div></div></div>";
+		
+		        // Append the modal HTML to the body
+		        $('body').append(modalHtml);
+		
+		        // Show the modal
+		        $('#reviewsModal').modal('show');
+		    });
 		});
 		
 		
@@ -258,6 +302,7 @@
 	    		data: JSON.stringify(bookingData),
 	    		success: function(response){
 	    		var bookingId = response.bookingId;
+	    			console.log("responeId" + bookingId);
 	    			console.log("bookingData" + JSON.stringify(bookingData));
 	    			alert("Booking confirmed!");
 	    			saveGuestWithBookingId(bookingId);
@@ -267,7 +312,7 @@
 		                type: "POST",
 		                url: "http://localhost:8484/bookHotel",
 		                contentType: "application/json",
-		                data: JSON.stringify(bookingData),
+		                data: JSON.stringify(response),
 		                success: function (response) {
 		                    alert("Email Sent!");
 		                    // Rest of your success handling code

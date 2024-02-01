@@ -12,4 +12,5 @@ public interface ReviewService {
     public List<Review> findAll();
     public void deleteById(Integer reviewId);
     boolean existsById(Integer reviewId);
+    public List<Review> findByHotelId(Integer hotelId);
 }

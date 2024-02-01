@@ -84,7 +84,7 @@ public class EmailService {
 						<h1>Your Stay at %s is Confirmed!</h1>
 						<p>Check-in Date: %s</p>
 						<p>Check-out Date: %s</p>
-						<p>Booked On: %s</p>
+				
 						<p>Status: %s</p>
 						
 						<p>Guests Information</p>
@@ -129,14 +129,13 @@ public class EmailService {
 							booking.getHotelName(),
 							booking.getCheckInDate(),
 							booking.getCheckOutDate(),
-							booking.getBookedOnDate(),
 							booking.getStatus(),
 							guestTable.toString(),
 							booking.getRoomType(),
 							booking.getNoRooms(),
 							booking.getPrice(),
-							booking.getDiscount() * 100,
-							booking.getTaxRateInPercent() * 100,
+							booking.getDiscount(),
+							booking.getTaxRateInPercent(),
 							booking.getFinalCharges(),
 							booking.getBonanzaDiscount(),
 							booking.getTotalSavings()

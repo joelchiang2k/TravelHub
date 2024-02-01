@@ -37,7 +37,7 @@ public class BookingController {
 	@PostMapping("/bookHotel")
 	@CrossOrigin(origins = "http://localhost:8282")
 	public ResponseEntity<String> createBooking(@RequestBody Booking booking){
-		
+		System.out.println("status" + booking.getStatus());
 		try {
 			Booking savedBooking = booking;
 			System.out.println("savedBooking" + savedBooking);
@@ -84,23 +84,41 @@ public class BookingController {
 	@CrossOrigin(origins = "http://localhost:8282")
 	public Booking saveBooking(@RequestBody Booking booking)
 	{
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-		
-		LocalDate currentDate = LocalDate.now();
-		booking.setHotelId(booking.getHotelId());
-		System.out.println("hotelId" + booking.getHotelId());
-		System.out.println("email" + booking.getUserEmail());
-		booking.setUserEmail(booking.getUserEmail());
-		booking.setBookingId(bookingService.getNextUserId() + 1);
-		booking.setBonanzaDiscount(0);
-		booking.setTotalSavings(booking.getDiscount() + booking.getBonanzaDiscount());
-		booking.setTaxRateInPercent(.10f);
-		booking.setFinalCharges(booking.getPrice() * 1.10f);
-		booking.setBookedOnDate(currentDate.format(formatter));
-		booking.setCheckInDate(LocalDate.parse(booking.getCheckInDate(), formatter).format(formatter));
-		booking.setCheckOutDate(LocalDate.parse(booking.getCheckOutDate(), formatter).format(formatter));
+		 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		return bookingService.save(booking);
+		    LocalDate currentDate = LocalDate.now();
+		    LocalDate checkInDate = LocalDate.parse(booking.getCheckInDate(), formatter);
+		    LocalDate checkOutDate = LocalDate.parse(booking.getCheckOutDate(), formatter);
+
+		    booking.setHotelId(booking.getHotelId());
+		    booking.setUserEmail(booking.getUserEmail());
+		    booking.setBookingId(bookingService.getNextUserId() + 1);
+		    booking.setBonanzaDiscount(0);
+		    booking.setTotalSavings(booking.getDiscount() + booking.getBonanzaDiscount());
+		    booking.setTaxRateInPercent(3.0f);
+
+		    float discountedPrice = booking.getPrice() * (1 - booking.getDiscount() / 100);
+		    float taxAmount = discountedPrice * (booking.getTaxRateInPercent() / 100);
+		    booking.setFinalCharges(discountedPrice + taxAmount);
+
+		    booking.setBookedOnDate(currentDate.format(formatter));
+		    booking.setCheckInDate(checkInDate.format(formatter));
+		    booking.setCheckOutDate(checkOutDate.format(formatter));
+
+		    // Set the status based on the current date and booking dates
+		    if (currentDate.isBefore(checkInDate)) {
+		        booking.setStatus("Upcoming");
+		    } else if (currentDate.isEqual(checkInDate) || (currentDate.isAfter(checkInDate) && currentDate.isBefore(checkOutDate))) {
+		        booking.setStatus("Current");
+		    } else {
+		        // Handle other cases if needed
+		        booking.setStatus("Completed");
+		    }
+//		    System.out.println("status" + booking.getStatus());
+		    
+		    
+
+		    return bookingService.save(booking);
 	}
 	
 	@RequestMapping(value = "findAllBookings", method = RequestMethod.GET)

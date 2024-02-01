@@ -80,6 +80,9 @@
 		            if (tabName === 'upcomingTab' || tabName === 'currentTab') {
 		                html += '<td><button class="btn btn-danger" onclick="cancelBooking(' + booking.bookingId + ')">Cancel</button></td>';
 		            }
+		            if (tabName === 'completedTab' && isCompleted(booking.checkOutDate)) {
+			            html += '<td><button class="btn btn-primary" onclick="writeReview(' + booking.bookingId + ')">Write a Review</button></td>';
+			        }
 		            html += '</tr>';
 		        }
 		    }
@@ -126,7 +129,52 @@
             const futureDate = new Date(checkOutDate).toISOString().split('T')[0];
             return currentDate >= pastDate && currentDate <= futureDate;
         }
+
+        window.writeReview = function (bookingId) {
+        // Set the bookingId in the modal's hidden input field
+        $('#bookingIdInput').val(bookingId);
+		console.log("reviewbookignId" + bookingId);
+        // Show the modal
+        $('#writeReviewModal').modal('show');
+    };
+
+    $('#writeReviewForm').submit(function (event) {
+    	console.log("clicked");
+        event.preventDefault();
+
+        var reviewData = {
+            text: $('#text').val(),
+            serviceRating: $('#serviceRating').val(),
+            bookingId: $('#bookingIdInput').val(),
+            amenitiesRating: $('#amenitiesRating').val(),
+            wholeExpRating: $('#wholeExpRating').val(),
+            bookingProcessRating: $('#bookingProcessRating').val()
+        };
+		console.log("reviewData", reviewData);
+        // Make an AJAX call to submit the review data to the controller
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8484/saveReview', // Update with your controller endpoint
+            contentType: 'application/json',
+            data: JSON.stringify(reviewData),
+            success: function (response) {
+                console.log('Review submitted successfully');
+                // Optionally, update the UI or perform other actions on success
+            },
+            error: function (error) {
+                console.error('Error submitting review:', error);
+                // Optionally, handle errors or display an error message
+            },
+            complete: function () {
+                // Close the modal after handling the AJAX call
+                $('#writeReviewModal').modal('hide');
+            }
+        });
     });
+    });
+    
+    
+    
 </script>
 
 
@@ -181,4 +229,46 @@
 </sec:authorize>
 
 </body>
+
+
+<div class="modal fade" id="writeReviewModal" tabindex="-1" role="dialog" aria-labelledby="writeReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="writeReviewModalLabel">Write a Review</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Add your form fields for writing a review here -->
+                <!-- For example, text area for review text, rating input fields, etc. -->
+                <form id="writeReviewForm">
+                    <!-- Your form fields go here -->
+                    <label for="text">Text:</label>
+                    <textarea id="text" name="text" class="form-control"></textarea>
+
+                    <label for="serviceRating">Service Rating:</label>
+                    <input type="number" id="serviceRating" name="serviceRating" class="form-control" min="1" max="5">
+                    
+                    <label for="amenitiesRating">Amenities Rating:</label>
+                    <input type="number" id="amenitiesRating" name="amenitiesRating" class="form-control" min="1" max="5">
+                    
+                    <label for="bookingProcessRating">Booking Process Rating:</label>
+                    <input type="number" id="bookingProcessRating" name="bookingProcessRating" class="form-control" min="1" max="5">
+                    
+                    <label for="wholeExpRating">Whole Experience Rating:</label>
+                    <input type="number" id="wholeExpRating" name="wholeExpRating" class="form-control" min="1" max="5">
+                    
+
+                    <!-- Include a hidden input field to store the bookingId -->
+                    <input type="hidden" id="bookingIdInput" name="bookingIdInput" value="">
+
+                    <!-- Add a submit button -->
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </html>

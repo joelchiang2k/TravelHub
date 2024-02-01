@@ -45,5 +45,9 @@ public class ReviewServiceImpl implements ReviewService {
 		// TODO Auto-generated method stub
 		return reviewRepository.existsById(reviewId);
 	}
+	
+	public List<Review> findByHotelId(Integer hotelId) {
+        return reviewRepository.findByHotelId(hotelId);
+    }
 
 }

@@ -48,6 +48,7 @@ public class GuestController {
     	System.out.println("editedguests" + guests);
         for (Guest guest : guests) {
             // Assuming that each guest has a bookingId property
+        	System.out.println("guestId" + guest.getBookingId());
             Booking booking = bookingService.findById(guest.getBookingId());
          
             System.out.println("booking: " + booking);

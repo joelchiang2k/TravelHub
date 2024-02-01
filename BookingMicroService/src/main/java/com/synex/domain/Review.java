@@ -20,6 +20,14 @@ public class Review {
 		@OneToOne
 		private Booking booking;
 		private String text;
+		private int bookingId;
+		private int hotelId;
+		public int getHotelId() {
+			return hotelId;
+		}
+		public void setHotelId(int hotelId) {
+			this.hotelId = hotelId;
+		}
 		private int serviceRating;
 		private int amenitiesRating;
 		private int bookingProcessRating;
@@ -40,6 +48,13 @@ public class Review {
 		}
 		public void setBooking(Booking booking) {
 			this.booking = booking;
+		}
+	
+		public int getBookingId() {
+			return bookingId;
+		}
+		public void setBookingId(int bookingId) {
+			this.bookingId = bookingId;
 		}
 		public String getText() {
 			return text;
